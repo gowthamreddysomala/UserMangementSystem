@@ -156,9 +156,9 @@ For more details, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 📫 Contact & Community
 
-- **Author:** Aditya Kumar  
-- [LinkedIn](https://www.linkedin.com/in/aditya-kumar-302795254/)  
-- [GitHub](https://github.com/aadityakumar08)  
-- [Open an Issue](https://github.com/aadityakumar08/UserManagementAPI/issues) for questions or suggestions
+- **Author:** Gowtham Reddy
+- [LinkedIn](https://www.linkedin.com/in/gowthamreddysomala/)  
+- [GitHub](https://github.com/gowthamreddysomala)  
+- [Open an Issue]* for questions or suggestions
 
 --- 
