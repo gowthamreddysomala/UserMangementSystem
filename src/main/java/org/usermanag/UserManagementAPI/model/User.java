@@ -13,7 +13,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-
+@Getter @Setter
 @Data
 @Entity
 @Table(name = "users")
@@ -28,7 +28,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    private String role;
     @NotBlank(message = "Name is Required")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     private String name;
@@ -56,6 +56,9 @@ public class User {
         this.email = email;
     }
 
+    public static String getRole() {
+        return getRole();
+    }
 
 
     // Getters and Setters
@@ -97,5 +100,9 @@ public class User {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Set<String> getRoles() {
+        return roles;
     }
 }
