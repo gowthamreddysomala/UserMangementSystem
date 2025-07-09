@@ -1,4 +1,15 @@
-# 🚀 UserManagementAPI
+   # 🚀 UserManagementAPI
+
+
+ATTENTION DEVELOPERS!
+This project, for ease of initial setup and local development, may contain default database credentials in src/main/resources/application.properties (or application.yml). An example for PostgreSQL is shown below, but the same principles apply to any production database like MariaDB.
+
+# ⚠️ DO NOT USE THESE DEFAULTS IN PRODUCTION! ⚠️
+spring.datasource.url=jdbc:postgresql://localhost:5432/your_database_name
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+spring.datasource.driver-class-name=org.postgresql.Driver
+
 
 <p align="center">
   <b>Robust, scalable, and modern REST API for user management built with Spring Boot</b>

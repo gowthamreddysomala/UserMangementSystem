@@ -4,25 +4,38 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-
+import java.util.HashSet;
+import java.util.Set;
+@Getter @Setter
+@Data
 @Entity
 @Table(name = "users")
 public class User {
+    @NotBlank(message = "Password Should not be Blank")
+    private String Password;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Column(name = "role")
+    private Set<String> roles = new HashSet<>();
+    @CollectionTable(name = "user_roles" , joinColumns = @JoinColumn(name = "user_id"))
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    private String role;
     @NotBlank(message = "Name is Required")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     private String name;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
+    @Column(unique = true)
     private String email;
 
     // Timestamp fields
@@ -43,6 +56,9 @@ public class User {
         this.email = email;
     }
 
+    public static String getRole() {
+        return getRole();
+    }
 
 
     // Getters and Setters
@@ -84,5 +100,9 @@ public class User {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Set<String> getRoles() {
+        return roles;
     }
 }

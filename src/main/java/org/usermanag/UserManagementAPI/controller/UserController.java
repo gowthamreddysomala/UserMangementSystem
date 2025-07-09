@@ -1,9 +1,9 @@
 package org.usermanag.UserManagementAPI.controller;
 
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.usermanag.UserManagementAPI.model.User;
 import org.usermanag.UserManagementAPI.repository.UserRepository;
@@ -24,16 +25,41 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    // POST single user
+    // PasswordEncoder is now properly injected via constructor
+    private final PasswordEncoder passwordEncoder;
+
+    public UserController(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    // POST single user (now handles password encoding if needed, or you can keep it simple)
+    // This is for general user creation, perhaps by an admin or another system
     @PostMapping
     public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
+        // Encode password if provided
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        // Set default role if not provided
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            user.setRoles(Collections.singleton("ROLE_USER"));
+        }
         User savedUser = userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
-    // POST multiple users
-    @PostMapping("/multiple")
-    public ResponseEntity<List<User>> createMultipleUsers(@Valid @RequestBody List<User> users) {
+    // POST multiple users (with password encoding and roles)
+    // Changed the path to avoid ambiguity with the single user POST
+    @PostMapping("/batch") // Renamed from "/multiple" or just "multiple"
+    public ResponseEntity<List<User>> createUsersBatch(@Valid @RequestBody List<User> users) {
+        users.forEach(user -> {
+            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
+            if (user.getRoles() == null || user.getRoles().isEmpty()) {
+                user.setRoles(Collections.singleton("ROLE_USER"));
+            }
+        });
         List<User> savedUsers = userRepository.saveAll(users);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUsers);
     }
@@ -57,9 +83,18 @@ public class UserController {
         return userRepository.findById(id).map(existingUser -> {
             existingUser.setName(userDetails.getName());
             existingUser.setEmail(userDetails.getEmail());
+
+            if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+                existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+            }
+
+            if (userDetails.getRoles() != null && !userDetails.getRoles().isEmpty()) {
+                existingUser.setRoles(userDetails.getRoles());
+            }
+
             User updatedUser = userRepository.save(existingUser);
             return ResponseEntity.ok(updatedUser);
-        }).orElse(ResponseEntity.notFound().build());
+        }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // DELETE user
@@ -81,11 +116,22 @@ public class UserController {
             InputStream inputStream = getClass().getResourceAsStream("/data/MOCK_DATA.json");
             List<User> mockUsers = mapper.readValue(inputStream, new TypeReference<List<User>>() {});
 
+            // Apply password encoding and roles to mock users before saving
+            mockUsers.forEach(user -> {
+                if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                    user.setPassword(passwordEncoder.encode(user.getPassword()));
+                }
+                if (user.getRoles() == null || user.getRoles().isEmpty()) {
+                    user.setRoles(Collections.singleton("ROLE_USER"));
+                }
+            });
+
             // Save to database to generate id, createdAt, updatedAt
             List<User> savedUsers = userRepository.saveAll(mockUsers);
 
             return ResponseEntity.ok(savedUsers);
         } catch (Exception e) {
+            e.printStackTrace(); // Log the actual exception for debugging
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -97,7 +143,17 @@ public class UserController {
         return ResponseEntity.ok(page);
     }
 
-  //Testing Pagination at  http://localhost:8080/api/users/page?page=0&size=10&sort=name,asc/desc
+    // Testing Pagination at http://localhost:8080/api/users/page?page=0&size=10&sort=name,asc/desc
 
-
+    // Specific endpoint for user registration (single user, typically by themselves)
+    @PostMapping("/register")
+    public ResponseEntity<User> registerUser(@Valid @RequestBody User user) {
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRoles(Collections.singleton("ROLE_USER")); // Ensure default role for new registrations
+        User savedUser = userRepository.save(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    }
 }
